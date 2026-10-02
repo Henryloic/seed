@@ -215,13 +215,31 @@ select:focus, input[type=number]:focus{ border-color:var(--rno-black); outline:n
 
 code{ background:var(--field); border:1px solid var(--line); padding:2px 6px; color:var(--txt); }
 
+/* ---- barres de chargement compactes ---- */
+.ligneChargement{ gap:8px; }
+.titreLigne{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.compact{ padding:6px 12px; font-size:12px; }
+select.compact{ width:auto; min-width:140px; padding:6px 10px; font-size:12px; }
+
+/* ---- sélection de plage temporelle ---- */
+.plageTools{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+.plageTools label{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.plageTools input[type=number]{ width:120px; }
+
 /* ---- bouton icône (remise à zéro) ---- */
 .btnIcone{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:38px;
-  height:38px;
+  width:32px;
+  height:32px;
   padding:0;
   background:var(--rno-white);
   color:var(--rno-black);
@@ -256,21 +274,22 @@ code{ background:var(--field); border:1px solid var(--line); padding:2px 6px; co
 
     <section class="card">
       <h2>Fichier</h2>
-      <div class="row">
-        <label class="filebtn" for="fichier">Choisir un fichier .M00x</label>
+      <div class="row ligneChargement">
+        <span class="titreLigne">Chargement</span>
+        <label class="filebtn compact" for="fichier" title="Fichier de mesure BPERF .M00x">.M00x</label>
         <input type="file" id="fichier" accept=".M001,.M002,.M003,.M004,.M005,.M006,.M007,.M008,.M009,.m001,.m002,.m003,.m004,.m005,.m006,.m007,.m008,.m009">
-        <label class="filebtn" for="fichierBrbc3">Choisir un fichier BRBC3</label>
+        <label class="filebtn compact" for="fichierBrbc3" title="Fichier de mesure BRBC3 (.csv)">BRBC3</label>
         <input type="file" id="fichierBrbc3" accept=".csv,.txt">
-        <label class="filebtn" for="fichierSf">Choisir un fichier Soufflerie froide</label>
+        <label class="filebtn compact" for="fichierSf" title="Fichier de mesure Soufflerie froide (.csv)">Soufflerie</label>
         <input type="file" id="fichierSf" accept=".csv,.txt">
-        <label class="filebtn" for="fichierSeed">Relire un fichier .seed</label>
+        <label class="filebtn compact" for="fichierSeed" title="Relire un export .seed">.seed</label>
         <input type="file" id="fichierSeed" accept=".seed">
-        <label for="encodage">Encodage</label>
-        <select id="encodage" class="encodage">
+        <label for="encodage" class="titreLigne">Encodage</label>
+        <select id="encodage" class="encodage compact">
           <option value="windows-1252">Windows-1252</option>
           <option value="utf-8">UTF-8</option>
         </select>
-        <button type="button" id="exporterCsv" disabled>Exporter SEED</button>
+        <button type="button" id="exporterCsv" class="compact" disabled>Exporter SEED</button>
         <button type="button" id="reinitialiserApp" class="btnIcone" title="Remettre l'application à zéro" aria-label="Remettre l'application à zéro">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-1 12H7L6 9Zm4 2v8m4-8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -286,11 +305,12 @@ code{ background:var(--field); border:1px solid var(--line); padding:2px 6px; co
         <button type="button" id="calculerSomme">Calculer la somme (_sum)</button>
       </div>
       <div id="processingTools" class="processingTools" hidden>
-        <div class="row">
-          <label class="filebtn" id="libelleOffset" for="fichierOffset">Choisir le fichier d'offset .M00x</label>
+        <div class="row ligneChargement">
+          <span class="titreLigne">Correction</span>
+          <label class="filebtn compact" id="libelleOffset" for="fichierOffset">Fichier d'offset</label>
           <input type="file" id="fichierOffset" accept=".M001,.M002,.M003,.M004,.M005,.M006,.M007,.M008,.M009,.m001,.m002,.m003,.m004,.m005,.m006,.m007,.m008,.m009">
-          <button type="button" id="appliquerCorrection" disabled>Appliquer offset et échelle</button>
-          <button type="button" id="reinitialiserCorrection" class="btn2" hidden>Réinitialiser</button>
+          <button type="button" id="appliquerCorrection" class="compact" disabled>Appliquer offset et échelle</button>
+          <button type="button" id="reinitialiserCorrection" class="btn2 compact" hidden>Réinitialiser</button>
         </div>
         <p id="etatCorrection" class="hint" role="status" aria-live="polite"></p>
         <div class="row clampTools">
@@ -301,17 +321,21 @@ code{ background:var(--field); border:1px solid var(--line); padding:2px 6px; co
         <p id="etatPinces" class="hint" role="status" aria-live="polite"></p>
       </div>
       <div id="syncTools" class="processingTools" hidden>
-        <div class="row">
-          <label class="filebtn" for="fichierCsv">Charger un CSV CAN</label>
+        <div class="row ligneChargement">
+          <span class="titreLigne">Chargement</span>
+          <label class="filebtn compact" for="fichierCsv" title="Journal CAN au format CSV">CSV CAN</label>
           <input type="file" id="fichierCsv" accept=".csv,text/csv">
-          <label class="filebtn" for="fichierCarScanner">Charger un CSV CarScanner</label>
+          <label class="filebtn compact" for="fichierCarScanner" title="Export CarScanner (.csv)">CarScanner</label>
           <input type="file" id="fichierCarScanner" accept=".csv,.txt">
-          <label class="filebtn" for="fichierObd">Charger un TXT OBD Facile</label>
+          <label class="filebtn compact" for="fichierObd" title="Export OBD Facile (.txt)">OBD Facile</label>
           <input type="file" id="fichierObd" accept=".txt,.csv">
-          <label class="filebtn" for="fichierDiagra">Charger un CSV Diagra</label>
+          <label class="filebtn compact" for="fichierDiagra" title="Export Diagra (.csv)">Diagra</label>
           <input type="file" id="fichierDiagra" accept=".csv,.txt">
-          <button type="button" id="ouvrirSync" disabled>Synchroniser les sources</button>
+          <button type="button" id="ouvrirSync" class="compact" disabled>Synchroniser</button>
+          <button type="button" id="appliquerEchelleSource" class="compact" disabled>Mettre à l'échelle</button>
         </div>
+        <p id="etatSync" class="hint" role="status" aria-live="polite"></p>
+      </div>
         <p id="etatSync" class="hint" role="status" aria-live="polite"></p>
       </div>
       <progress id="progression" max="1" value="0" hidden></progress>
@@ -348,6 +372,15 @@ code{ background:var(--field); border:1px solid var(--line); padding:2px 6px; co
       <section class="card" id="graphCard" hidden>
         <h2>Évolution des mesures</h2>
         <div id="monGraphe" class="plot"></div>
+        <div class="row plageTools">
+          <label for="plageDebut">Début (s)</label>
+          <input type="number" id="plageDebut" step="any" min="0">
+          <label for="plageFin">Fin (s)</label>
+          <input type="number" id="plageFin" step="any" min="0">
+          <button type="button" id="plageComplete" class="btn2">Plage complète</button>
+          <button type="button" id="exporterPlage">Exporter la plage affichée</button>
+        </div>
+        <p id="etatPlage" class="hint" role="status" aria-live="polite"></p>
       </section>
     </div>
   </main>
@@ -379,10 +412,10 @@ const CORRESPONDANCES_VOIES = [
 ];
 
 const BANCS = {
-  bperf: { libelle: "BPERF (.M00x)", accept: ".M001,.M002,.M003,.M004,.M005,.M006,.M007,.M008,.M009,.m001,.m002,.m003,.m004,.m005,.m006,.m007,.m008,.m009", correction: true },
+  bperf: { libelle: "BPERF", accept: ".M001,.M002,.M003,.M004,.M005,.M006,.M007,.M008,.M009,.m001,.m002,.m003,.m004,.m005,.m006,.m007,.m008,.m009", correction: true },
   brbc3: { libelle: "BRBC3", accept: ".csv,.txt", correction: true },
-  soufflerie: { libelle: "Soufflerie froide", accept: ".csv,.txt", correction: true },
-  seed: { libelle: "SEED (.seed)", accept: ".seed", correction: false }
+  soufflerie: { libelle: "Soufflerie", accept: ".csv,.txt", correction: true },
+  seed: { libelle: "SEED", accept: ".seed", correction: false }
 };
 
 // Les fichiers d'un même banc écrivent indifféremment les voies avec espaces ou soulignés.
@@ -951,12 +984,11 @@ function formaterValeurSeed(valeur){
   return texte === "-0" ? "0" : texte;
 }
 
-function contenuExportSeed(colonnes, instants){
-  const longueur = instants.length;
+function contenuExportSeed(colonnes, instants, debut = 0, fin = instants.length - 1){
   const pas = pasTemps(instants);
   const lignes = [["TEMPS", ...colonnes.map(nomVoieSeed)].join("\t")];
-  for(let index = 0; index < longueur; index++){
-    const champs = [formaterValeurSeed(index * pas)];
+  for(let index = debut; index <= fin; index++){
+    const champs = [formaterValeurSeed((index - debut) * pas)];
     for(const colonne of colonnes) champs.push(formaterValeurSeed(colonne.valeurs[index]));
     lignes.push(champs.join("\t"));
   }
@@ -981,6 +1013,7 @@ function reinitialiserInterface(){
   for(const [identifiant] of ENTREES_MESURES) $(identifiant).value = "";
   $("syncTools").hidden = true;
   $("ouvrirSync").disabled = true;
+  $("appliquerEchelleSource").disabled = true;
   $("etatSync").textContent = "";
   $("exporterCsv").disabled = true;
   if($("syncDialog").open) $("syncDialog").close();
@@ -993,7 +1026,11 @@ function reinitialiserInterface(){
   $("measureActions").hidden = true;
   $("processingTools").hidden = true;
   $("variables").replaceChildren();
+  $("plageDebut").value = "";
+  $("plageFin").value = "";
+  $("etatPlage").textContent = "";
   if(typeof Plotly !== "undefined") Plotly.purge("monGraphe");
+  grapheEcoute = false;
   $("fichierOffset").value = "";
   $("appliquerCorrection").disabled = true;
   $("fusionnerPinces").disabled = true;
@@ -1012,7 +1049,7 @@ async function chargerFichier(fichier, banc){
   $("nomFichierMesure").hidden = false;
   bancCourant = banc;
   $("fichierOffset").setAttribute("accept", BANCS[banc].accept);
-  $("libelleOffset").textContent = `Choisir le fichier d'offset ${BANCS[banc].libelle}`;
+  $("libelleOffset").textContent = `Offset ${BANCS[banc].libelle}`;
   $("progression").hidden = false;
   $("etat").textContent = `Lecture de ${fichier.name}...`;
 
@@ -1029,6 +1066,7 @@ async function chargerFichier(fichier, banc){
       colonne.uniteInitiale = colonne.unite;
       colonne.labelInitial = colonne.label;
     }
+    reinitialiserPlage();
       remplirVariables(new Set(), false);
     remplirFamillesPinces();
     $("measureActions").hidden = false;
@@ -1095,6 +1133,7 @@ function synchroniserSources(){
       index: premierIndex + index,
       nom: colonne.nom,
       nomAffiche: colonne.nom,
+      externe: true,
       label,
       labelInitial: label,
       unite,
@@ -1126,21 +1165,67 @@ function calculerOffsets(donnees){
   return offsets;
 }
 
+// Convention d'instrumentation commune aux bancs : TYPE_<voie>_<coefficient>.
+const SUFFIXES_ECHELLE = { I: "A", U: "V", T: "°C", P: "bar", D: "mm" };
+
+function echelleVoie(nom){
+  const morceaux = nom.split("_");
+  const type = morceaux[0];
+  const texteCoeff = morceaux[morceaux.length - 1];
+  const coeff = Number(texteCoeff);
+  if(morceaux.length < 2 || !Object.hasOwn(SUFFIXES_ECHELLE, type)) return null;
+  if(!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(texteCoeff) || !Number.isFinite(coeff)) return null;
+  return { type, coeff, unite: SUFFIXES_ECHELLE[type] };
+}
+
+function appliquerEchelleSource(){
+  if(!sourceExterne || sourceExterne.echelleAppliquee) return;
+  let voiesMisesEchelle = 0;
+  const misesEchelle = new Map();
+
+  for(const colonne of sourceExterne.mesures){
+    const echelle = echelleVoie(colonne.nom);
+    if(!echelle) continue;
+    colonne.valeurs = colonne.valeurs.map(valeur => valeur === null ? null : valeur * echelle.coeff / 10);
+    colonne.unite = echelle.unite;
+    colonne.coeff = echelle.coeff;
+    misesEchelle.set(colonne.nom, echelle);
+    voiesMisesEchelle++;
+  }
+
+  // Les voies déjà fusionnées par une synchronisation antérieure doivent suivre.
+  for(const colonne of mesures){
+    const echelle = colonne.externe ? misesEchelle.get(colonne.nom) : null;
+    if(!echelle) continue;
+    colonne.valeurs = colonne.valeurs.map(valeur => valeur === null ? null : valeur * echelle.coeff / 10);
+    colonne.valeursInitiales = colonne.valeurs.slice();
+    colonne.unite = echelle.unite;
+    colonne.uniteInitiale = echelle.unite;
+    colonne.coeff = echelle.coeff;
+  }
+
+  sourceExterne.echelleAppliquee = true;
+  $("appliquerEchelleSource").disabled = true;
+  remplirVariables(new Set(Array.from($("variables").selectedOptions, option => Number(option.value))));
+  remplirFamillesPinces();
+  if($("variables").selectedOptions.length) tracer();
+  $("etatSync").textContent = voiesMisesEchelle
+    ? `${voiesMisesEchelle} voie(s) de ${sourceExterne.libelle} mises à l'échelle depuis leur coefficient.`
+    : `Aucune voie de ${sourceExterne.libelle} ne suit la convention TYPE_…_coefficient.`;
+}
+
 function appliquerCorrection(){
   if(!donneesOffset || !mesures.length || correctionAppliquee) return;
   const offsets = calculerOffsets(donneesOffset);
-  const suffixes = { I: "A", U: "V", T: "°C", P: "bar", D: "mm" };
   let voiesCorrigees = 0;
   let offsetsAppliques = 0;
   let offsetsManquants = 0;
 
   mesures = mesures.filter(colonne => !colonne.derivee);
   for(const colonne of mesures){
-    const morceaux = colonne.nom.split("_");
-    const type = morceaux[0];
-    const texteCoeff = morceaux[morceaux.length - 1];
-    const coeff = Number(texteCoeff);
-    if(!Object.hasOwn(suffixes, type) || !/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(texteCoeff) || !Number.isFinite(coeff)) continue;
+    const echelle = echelleVoie(colonne.nom);
+    if(!echelle) continue;
+    const { type, coeff } = echelle;
 
     colonne.coeff = coeff;
     const offset = offsets.get(colonne.nom) ?? 0;
@@ -1151,8 +1236,8 @@ function appliquerCorrection(){
     }
     const signe = colonne.signe || 1;
     colonne.valeurs = colonne.valeursInitiales.map(valeur => valeur === null ? null : (valeur - (offsetEligible ? offset : 0)) * coeff / 10 * signe);
-    colonne.unite = suffixes[type];
-    colonne.label = `${colonne.nomAffiche}${suffixes[type]} (${colonne.index + 1})`;
+    colonne.unite = echelle.unite;
+    colonne.label = `${colonne.nomAffiche}${echelle.unite} (${colonne.index + 1})`;
     voiesCorrigees++;
   }
 
@@ -1395,6 +1480,55 @@ function calculerVoieSelectionnee(operation){
   $("etat").textContent = `${nom} ajouté aux variables à afficher.`;
 }
 
+/* ---- sélection d'une plage temporelle ---- */
+
+let grapheEcoute = false;
+
+function secondesDepuisDebut(instant){
+  return (Date.parse(instant) - Date.parse(dates[0])) / 1000;
+}
+
+function indicesPlage(){
+  const pas = pasTemps(dates);
+  const dernier = dates.length - 1;
+  const borne = valeur => Math.min(dernier, Math.max(0, Math.round(valeur / pas)));
+  const debut = borne($("plageDebut").valueAsNumber);
+  const fin = borne($("plageFin").valueAsNumber);
+  return debut <= fin ? { debut, fin } : { debut: fin, fin: debut };
+}
+
+function majEtatPlage(){
+  const { debut, fin } = indicesPlage();
+  $("etatPlage").textContent = `${(fin - debut + 1).toLocaleString("fr-FR")} échantillons sélectionnés sur ${dates.length.toLocaleString("fr-FR")}.`;
+}
+
+function reinitialiserPlage(){
+  if(!dates.length) return;
+  $("plageDebut").value = "0";
+  $("plageFin").value = formaterValeurSeed(secondesDepuisDebut(dates[dates.length - 1]));
+  majEtatPlage();
+}
+
+function ecrirePlageDepuisGraphe(evenement){
+  const debut = evenement["xaxis.range[0]"] ?? evenement["xaxis.range"]?.[0];
+  const fin = evenement["xaxis.range[1]"] ?? evenement["xaxis.range"]?.[1];
+  if(evenement["xaxis.autorange"] || debut === undefined || fin === undefined){
+    if(evenement["xaxis.autorange"]) reinitialiserPlage();
+    return;
+  }
+  const dernier = secondesDepuisDebut(dates[dates.length - 1]);
+  $("plageDebut").value = formaterValeurSeed(Math.max(0, secondesDepuisDebut(debut)));
+  $("plageFin").value = formaterValeurSeed(Math.min(dernier, secondesDepuisDebut(fin)));
+  majEtatPlage();
+}
+
+function appliquerPlageAuGraphe(){
+  if(typeof Plotly === "undefined" || !dates.length) return;
+  const { debut, fin } = indicesPlage();
+  majEtatPlage();
+  Plotly.relayout("monGraphe", { "xaxis.range": [dates[debut], dates[fin]] });
+}
+
 function tracer(){
   if(typeof Plotly === "undefined"){
     $("etat").textContent = "Plotly indisponible : vérifier la connexion réseau.";
@@ -1404,6 +1538,7 @@ function tracer(){
   if(!selection.length){
     $("graphCard").hidden = true;
     Plotly.purge("monGraphe");
+    grapheEcoute = false;
     $("etat").textContent = "Sélectionner au moins une variable à tracer.";
     return;
   }
@@ -1432,12 +1567,16 @@ function tracer(){
     colorway: ["#000000", "#EFDF00", "#888B8D", "#0057B8", "#C8102E", "#BBBCBC", "#00843D", "#7A3E9D"],
     font: { color: "#000000", family: "NouvelR, Segoe UI, Roboto, Arial, sans-serif" },
     margin: { t: 20, r: deuxAxes ? 60 : 25, b: 60, l: 60 },
-    xaxis: { title: "Date / heure", type: "date", gridcolor: "#D9D9D6", zerolinecolor: "#BBBCBC" },
+    xaxis: { title: "Date / heure", type: "date", gridcolor: "#D9D9D6", zerolinecolor: "#BBBCBC", rangeslider: { thickness: .08, bgcolor: "#FAFAF9", bordercolor: "#D9D9D6", borderwidth: 1 } },
     yaxis: { title: unites.length === 1 ? unites[0] : deuxAxes ? unites[0] : "Valeur", gridcolor: "#D9D9D6", zerolinecolor: "#BBBCBC" },
     ...(deuxAxes ? { yaxis2: { title: unites[1], overlaying: "y", side: "right", showgrid: false } } : {}),
     legend: { orientation: "h", y: -0.3 },
     hovermode: "x unified"
   }, { responsive: true, displaylogo: false });
+  if(!grapheEcoute){
+    $("monGraphe").on("plotly_relayout", ecrirePlageDepuisGraphe);
+    grapheEcoute = true;
+  }
 }
 
 const ENTREES_MESURES = [
@@ -1459,23 +1598,38 @@ $("reinitialiserApp").addEventListener("click", () => {
   reinitialiserInterface();
   bancCourant = "bperf";
   $("fichierOffset").setAttribute("accept", BANCS.bperf.accept);
-  $("libelleOffset").textContent = `Choisir le fichier d'offset ${BANCS.bperf.libelle}`;
+  $("libelleOffset").textContent = `Offset ${BANCS.bperf.libelle}`;
   $("nomFichierMesure").textContent = "";
   $("nomFichierMesure").hidden = true;
   $("encodage").selectedIndex = 0;
   $("etat").textContent = "Aucun fichier chargé.";
 });
-$("exporterCsv").addEventListener("click", () => {
+function exporterSeed(debut, fin, suffixe){
   if(!dates.length || !mesures.length) return;
   const nomSource = $("nomFichierMesure").textContent.replace(/\.[^.]+$/, "").replace(/^SEED_/, "");
-  const nomFichier = `SEED_${nomSource}${donneesAvantSync ? "_synchronise" : ""}.seed`;
-  const url = URL.createObjectURL(new Blob([encoderCp1252(contenuExportSeed(mesures, dates))], { type: "text/tab-separated-values;charset=windows-1252" }));
+  const nomFichier = `SEED_${nomSource}${donneesAvantSync ? "_synchronise" : ""}${suffixe}.seed`;
+  const contenu = contenuExportSeed(mesures, dates, debut, fin);
+  const url = URL.createObjectURL(new Blob([encoderCp1252(contenu)], { type: "text/tab-separated-values;charset=windows-1252" }));
   const lien = document.createElement("a");
   lien.href = url;
   lien.download = nomFichier;
   lien.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  $("etat").textContent = `${nomFichier} exporté : ${dates.length.toLocaleString("fr-FR")} mesures, ${mesures.length} variables.`;
+  $("etat").textContent = `${nomFichier} exporté : ${(fin - debut + 1).toLocaleString("fr-FR")} mesures, ${mesures.length} variables.`;
+}
+
+$("exporterCsv").addEventListener("click", () => exporterSeed(0, dates.length - 1, ""));
+$("exporterPlage").addEventListener("click", () => {
+  if(!dates.length) return;
+  const { debut, fin } = indicesPlage();
+  const pas = pasTemps(dates);
+  exporterSeed(debut, fin, `_${Math.round(debut * pas)}s-${Math.round(fin * pas)}s`);
+});
+$("plageDebut").addEventListener("change", appliquerPlageAuGraphe);
+$("plageFin").addEventListener("change", appliquerPlageAuGraphe);
+$("plageComplete").addEventListener("click", () => {
+  reinitialiserPlage();
+  if(typeof Plotly !== "undefined") Plotly.relayout("monGraphe", { "xaxis.autorange": true });
 });
 const ENTREES_SOURCES = [
   ["fichierCsv", null],
@@ -1496,6 +1650,7 @@ async function chargerSourceExterne(evenement, type){
     sourceExterne = resultat;
     for(const [identifiant] of ENTREES_SOURCES) if(identifiant !== evenement.target.id) $(identifiant).value = "";
     $("ouvrirSync").disabled = false;
+    $("appliquerEchelleSource").disabled = !resultat.mesures.some(colonne => echelleVoie(colonne.nom));
     const pas = resultat.reechantillonne
       ? ` Pas de temps ${resultat.pasSource.toFixed(4)} s rééchantillonné à ${resultat.pasCible.toFixed(4)} s.`
       : resultat.pasSource ? ` Pas de temps ${resultat.pasSource.toFixed(4)} s identique au fichier M00x.` : "";
@@ -1503,6 +1658,7 @@ async function chargerSourceExterne(evenement, type){
   }catch(erreur){
     if(session !== chargement || evenement.target.files[0] !== fichier) return;
     sourceExterne = null;
+    $("appliquerEchelleSource").disabled = true;
     $("etatSync").textContent = `Erreur : ${erreur.message}`;
   }
 }
@@ -1543,6 +1699,7 @@ $("fichierOffset").addEventListener("change", async evenement => {
   }
 });
 $("appliquerCorrection").addEventListener("click", appliquerCorrection);
+$("appliquerEchelleSource").addEventListener("click", appliquerEchelleSource);
 $("reinitialiserCorrection").addEventListener("click", reinitialiserCorrection);
 $("famillePinces").addEventListener("change", () => {
   $("fusionnerPinces").disabled = !correctionAppliquee || !$("famillePinces").value;
@@ -1557,6 +1714,7 @@ $("variables").addEventListener("change", tracer);
 $("effacerSelection").addEventListener("click", () => {
   for(const option of $("variables").options) option.selected = false;
   if(typeof Plotly !== "undefined") Plotly.purge("monGraphe");
+  grapheEcoute = false;
   $("graphCard").hidden = true;
 });
 
