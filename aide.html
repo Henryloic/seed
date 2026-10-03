@@ -61,7 +61,7 @@ code{ overflow-wrap:anywhere; }
 pre{ overflow-x:auto; padding:12px; background:#F4F4F2; border-left:4px solid var(--yellow); }
 blockquote{ margin:14px 0; padding:8px 14px; border-left:4px solid var(--yellow); background:#FAFAF9; }
 .exportAsam{ margin:16px 0; }
-.exportAsam img{ display:block; max-width:100%; height:auto; }
+.exportAsam img{ display:block; max-width:250px; height:auto; }
 .exportAsam figcaption{ margin-top:8px; font-size:14px; }
 @media(max-width:640px){
   body{ padding:12px; }
@@ -150,7 +150,7 @@ blockquote{ margin:14px 0; padding:8px 14px; border-left:4px solid var(--yellow)
       <p>Dans l'outil <strong>ASAM MDF (asammdf)</strong>, exporter le journal CAN avec les réglages ci-dessous. Utiliser les mêmes réglages pour le fichier de mesure et le fichier d'offset.</p>
       <ul>
         <li><strong>Cut</strong> : décoché, pour exporter l'enregistrement complet.</li>
-        <li><strong>Resample</strong> : coché ; sélectionner <strong>step</strong> et régler le pas à <code>0.100000s</code> (0,1 s, soit 10 Hz). Laisser <strong>Time from 0s</strong> décoché.</li>
+        <li><strong>Resample</strong> : coché ; sélectionner pour un fichier à 10Hz ;  <strong>step</strong> et régler le pas à <code>0.100000s</code> (0,1 s, soit 10 Hz). Laisser <strong>Time from 0s</strong> décoché.</li>
         <li><strong>Output format</strong> : <code>CSV</code>.</li>
         <li><strong>Single time base</strong> et <strong>Time as date</strong> : cochés. Laisser <strong>Time from 0s</strong>, <strong>Raw values</strong> et <strong>Use display names</strong> décochés.</li>
         <li><strong>Empty channels</strong> : <code>skip</code> ; <strong>Delimiter</strong> : virgule (<code>,</code>).</li>
