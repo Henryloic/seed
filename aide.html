@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aide - SEED</title>
+  <style>
+:root{
+  --yellow:#EFDF00;
+  --black:#000000;
+  --white:#FFFFFF;
+  --gray-light:#D9D9D6;
+  --bg:#F4F4F2;
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  padding:24px;
+  color:var(--black);
+  background:var(--bg);
+  font-family:"NouvelR", "Segoe UI", Roboto, Arial, sans-serif;
+  line-height:1.6;
+}
+main{ max-width:1100px; margin:0 auto; }
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:24px;
+  padding-bottom:16px;
+  border-bottom:4px solid var(--yellow);
+}
+h1{ margin:0; font-size:24px; text-transform:uppercase; }
+h2{ margin:32px 0 12px; padding-top:16px; border-top:1px solid var(--gray-light); font-size:19px; }
+h3{ margin:22px 0 8px; font-size:15px; }
+p{ margin:8px 0 14px; }
+ul{ padding-left:22px; }
+li{ margin:5px 0; }
+a{ color:var(--black); }
+.retour, .sommaire a{
+  display:inline-block;
+  padding:7px 12px;
+  border:1px solid var(--black);
+  background:var(--white);
+  font-weight:700;
+  text-decoration:none;
+}
+.retour:hover, .sommaire a:hover{ background:var(--yellow); }
+.intro, .sommaire, section{ background:var(--white); border:1px solid var(--gray-light); padding:20px; }
+.sommaire{ display:flex; flex-wrap:wrap; gap:8px; margin:18px 0; }
+.sommaire a{ font-size:13px; }
+section{ margin-top:14px; }
+section h2{ margin-top:0; padding-top:0; border:0; }
+.tableViewport{ max-width:100%; overflow-x:auto; }
+table{ width:100%; border-collapse:collapse; margin:12px 0 18px; font-size:14px; }
+th, td{ padding:8px 10px; border:1px solid var(--gray-light); text-align:left; vertical-align:top; }
+th{ background:#FAFAF9; }
+code, pre{ font-family:Consolas, "Courier New", monospace; }
+code{ overflow-wrap:anywhere; }
+pre{ overflow-x:auto; padding:12px; background:#F4F4F2; border-left:4px solid var(--yellow); }
+blockquote{ margin:14px 0; padding:8px 14px; border-left:4px solid var(--yellow); background:#FAFAF9; }
+@media(max-width:640px){
+  body{ padding:12px; }
+  header{ align-items:flex-start; flex-direction:column; }
+  .intro, .sommaire, section{ padding:14px; }
+  table{ min-width:600px; }
+}
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Aide fonctionnelle SEED</h1>
+      <a class="retour" href="index.html">Retour à l'application</a>
+    </header>
+
+    <div class="intro">
+      <p>Guide de l'outil de normalisation des mesures bancs, destiné aux exploitants d'essais familiers du traitement du signal.</p>
+      <p>L'application fonctionne dans le navigateur, sans serveur. Les fichiers sont traités en mémoire et aucune donnée ne quitte le poste. La lecture en flux permet de charger des enregistrements volumineux sans décoder tout le fichier simultanément.</p>
+    </div>
+
+    <nav class="sommaire" aria-label="Sommaire">
+      <a href="#chargement">Chargement</a>
+      <a href="#correction">Correction</a>
+      <a href="#pinces">Pinces</a>
+      <a href="#synchronisation">Synchronisation</a>
+      <a href="#operations">Opérations</a>
+      <a href="#visualisation">Visualisation</a>
+      <a href="#plage">Plage temporelle</a>
+      <a href="#export">Export SEED</a>
+      <a href="#reinitialisation">Remise à zéro</a>
+    </nav>
+
+    <section id="chargement">
+      <h2>1. Chargement d'un fichier de mesure</h2>
+      <p>Dans la carte <strong>Fichier</strong>, un seul fichier de mesure est actif à la fois. En charger un nouveau réinitialise la session.</p>
+      <div class="tableViewport"><table>
+        <thead><tr><th>Bouton</th><th>Format attendu</th><th>Encodage</th><th>Base de temps</th></tr></thead>
+        <tbody>
+          <tr><td><code>.M00x</code></td><td>Morphée, tabulation, 4 lignes d'entête</td><td>Sélectionnable</td><td>Timer de l'enregistrement libre et horodatage reconstruit depuis Date/Heure</td></tr>
+          <tr><td>BRBC3</td><td>CSV virgule</td><td>UTF-8</td><td>Colonne <code>TEMPS</code> (s), instant initial lu dans <code>Time</code></td></tr>
+          <tr><td>Soufflerie</td><td>CSV point-virgule, 1 ligne d'entête</td><td>Windows-1252</td><td>Colonne 1 (s), date/heure dans les colonnes 3 et 2 de la première ligne de données</td></tr>
+          <tr><td><code>.seed</code></td><td>TSV, 1 ligne d'entête</td><td>Windows-1252</td><td>Colonne <code>TEMPS</code> (s)</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Entêtes et voies</h3>
+      <p>Le format <code>.M00x</code> est positionnel : ligne 1 <code>MNTPFILE</code>, ligne 3 noms de voies, ligne 4 unités. Pour BRBC3, l'outil recherche la ligne commençant par <code>TEMPS</code> dans les 30 premières lignes et mémorise aussi les constantes d'entête.</p>
+      <p>Les colonnes entièrement non numériques sont écartées. Les champs vides, <code>NaN</code> et booléens deviennent des valeurs absentes : ils restent des discontinuités dans le tracé et ne sont pas interpolés silencieusement.</p>
+      <p>Les noms de voies connus sont normalisés selon la table de correspondances commune. La correspondance accepte les espaces ou les soulignés ; les voies non référencées gardent leur nom. Pour BRBC3, espaces et <code>~</code> deviennent des soulignés, et les constantes d'entête (inertie et coefficients F0/F1/F2) sont ajoutées comme voies constantes.</p>
+      <h3>Base de temps et encodage</h3>
+      <p>BRBC3, Soufflerie et SEED utilisent un pas estimé depuis les premières mesures, puis reconstruisent une base de temps uniforme. Cela supprime la gigue d'acquisition et fournit un pas constant. Pour <code>.M00x</code>, l'horodatage est reconstruit depuis le timer, ce qui préserve les ruptures éventuelles de cadence. Le sélecteur d'encodage ne concerne que les fichiers <code>.M00x</code>.</p>
+    </section>
+
+    <section id="correction">
+      <h2>2. Correction : offset et mise à l'échelle</h2>
+      <p>La section <strong>Correction</strong> est masquée pour les fichiers <code>.seed</code>, déjà normalisés. Une voie est éligible si son nom suit la convention <code>TYPE_&lt;désignation&gt;_&lt;coefficient&gt;</code>.</p>
+      <div class="tableViewport"><table>
+        <thead><tr><th>Préfixe</th><th>Grandeur</th><th>Unité</th></tr></thead>
+        <tbody><tr><td>I</td><td>Courant</td><td>A</td></tr><tr><td>U</td><td>Tension</td><td>V</td></tr><tr><td>T</td><td>Température</td><td>°C</td></tr><tr><td>P</td><td>Pression</td><td>bar</td></tr><tr><td>D</td><td>Déplacement</td><td>mm</td></tr></tbody>
+      </table></div>
+      <p>Le fichier d'offset doit provenir du même banc. Pour chaque voie éligible, l'offset est la moyenne des 60 dernières secondes du fichier, supposées correspondre à un palier stabilisé au repos.</p>
+      <pre>valeur_corrigée = (valeur_brute - offset) × coefficient / 10 × signe</pre>
+      <p>L'offset n'est pas soustrait aux voies de type <code>T</code>, car une température absolue n'a pas de zéro instrumental à compenser. La correction repart toujours des valeurs brutes et n'est jamais cumulative. <strong>Réinitialiser</strong> restaure les valeurs d'origine.</p>
+    </section>
+
+    <section id="pinces">
+      <h2>3. Fusion des calibres de pinces ampèremétriques</h2>
+      <p>La fusion est disponible après la mise à l'échelle. Une famille regroupe les voies ayant la même racine <code>I_&lt;désignation&gt;</code> avec des calibres différents en suffixe.</p>
+      <p>Seules les voies dont l'écart-type dépasse <strong>0,25 A</strong> sont retenues, ce qui écarte les pinces inactives ou bloquées à zéro. Les calibres sont triés par ordre croissant : la pince la plus sensible est conservée aux faibles amplitudes, puis les valeurs de la pince de calibre supérieur la remplacent au-delà de <code>calibre_précédent - 10</code>.</p>
+      <p>La voie résultante porte le suffixe <em>(fusion des calibres)</em>.</p>
+    </section>
+
+    <section id="synchronisation">
+      <h2>4. Sources externes et synchronisation</h2>
+      <p>La section de synchronisation apparaît lorsqu'un fichier de mesure est chargé.</p>
+      <div class="tableViewport"><table>
+        <thead><tr><th>Bouton</th><th>Extension / séparateur</th><th>Entête</th><th>Temps</th></tr></thead>
+        <tbody>
+          <tr><td>CSV CAN</td><td><code>.csv</code>, virgule ou point-virgule détecté automatiquement</td><td>1 ligne</td><td>Ignoré, alignement par index</td></tr>
+          <tr><td>CarScanner</td><td><code>.csv</code>, virgule</td><td>1 ligne</td><td><code>HH:mm:ss.SSS</code>, passage de minuit géré</td></tr>
+          <tr><td>OBD Facile</td><td><code>.txt</code>, point-virgule</td><td>3 lignes, noms ligne 1 et unités ligne 3</td><td>Secondes, notation française</td></tr>
+          <tr><td>Diagra</td><td><code>.csv</code>, point-virgule</td><td>3 lignes, noms ligne 2 et unités ligne 3</td><td>Millisecondes</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Rééchantillonnage</h3>
+      <p>Le pas médian de la source est comparé à celui de la mesure. Si l'écart relatif dépasse <code>10⁻³</code>, les voies sont rééchantillonnées par interpolation linéaire sur une grille au pas cible. En deçà, elles restent inchangées pour éviter un lissage inutile.</p>
+      <p>L'interpolation ne crée aucune valeur en dehors de la plage source ni à cheval sur un trou. Elle agit comme un filtre passe-bas implicite : une source sous-échantillonnée, par exemple CAN à 1 Hz face à un banc à 10 Hz, ne restitue pas la dynamique manquante.</p>
+      <h3>Mise à l'échelle et alignement</h3>
+      <pre>valeur = valeur_brute × coefficient / 10</pre>
+      <p>Le bouton <strong>Mettre à l'échelle</strong> applique le facteur seul, sans offset, aux voies respectant la convention de nommage. Il est désactivé si aucune voie n'est éligible et après application, pour éviter un double facteur. Les voies déjà fusionnées suivent également la mise à l'échelle.</p>
+      <p>Pour <strong>Synchroniser</strong>, choisir une voie dans chaque source et un seuil. L'outil repère le premier franchissement croissant du seuil (<code>v[i-1] &lt; seuil</code> et <code>v[i] ≥ seuil</code>), puis aligne les deux indices. Seule la plage commune est conservée et les voies externes sont ajoutées au jeu de mesures.</p>
+      <p>Choisir un front net, par exemple le démarrage du véhicule sur une voie de vitesse. Un seuil trop bas peut déclencher sur le bruit de zéro. La synchronisation est réversible : une nouvelle synchronisation repart des données non tronquées.</p>
+    </section>
+
+    <section id="operations">
+      <h2>5. Opérations sur les voies</h2>
+      <div class="tableViewport"><table>
+        <thead><tr><th>Action</th><th>Effet</th></tr></thead>
+        <tbody>
+          <tr><td>Inverser le signe</td><td>Multiplie par -1 les voies sélectionnées ; le signe est conservé lors d'une correction.</td></tr>
+          <tr><td>Renommer la voie</td><td>Modifie le nom affiché et exporté. Une seule voie à la fois.</td></tr>
+          <tr><td>Supprimer la voie</td><td>Retire la voie du jeu de données.</td></tr>
+          <tr><td>Calculer la moyenne (_moy)</td><td>Calcule la moyenne échantillon par échantillon.</td></tr>
+          <tr><td>Calculer la somme (_sum)</td><td>Calcule la somme échantillon par échantillon.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Les calculs ignorent les valeurs absentes : la moyenne porte sur les seules voies valides à chaque instant et vaut « absent » si aucune voie ne l'est. L'unité n'est propagée que si toutes les voies sources partagent la même. Relancer un calcul avec les mêmes sources met à jour la voie existante.</p>
+    </section>
+
+    <section id="visualisation">
+      <h2>6. Visualisation</h2>
+      <p>Jusqu'à <strong>16 voies</strong> peuvent être affichées simultanément. Le tracé utilise <code>scattergl</code>, adapté aux enregistrements de grande taille.</p>
+      <ul>
+        <li>Deux unités différentes créent automatiquement un second axe Y à droite.</li>
+        <li>L'axe X affiche la date et l'heure ; le survol unifié facilite la comparaison au même instant.</li>
+        <li>Les valeurs absentes restent visibles comme des discontinuités.</li>
+      </ul>
+    </section>
+
+    <section id="plage">
+      <h2>7. Sélection d'une plage temporelle</h2>
+      <ul>
+        <li>Le curseur sous l'axe X permet de sélectionner une plage et d'en prévisualiser la courbe.</li>
+        <li>Les champs <strong>Début (s)</strong> et <strong>Fin (s)</strong> règlent précisément les bornes ; ils suivent le zoom et le curseur.</li>
+        <li><strong>Plage complète</strong> restaure toute l'étendue.</li>
+        <li>Le compteur indique le nombre d'échantillons sélectionnés.</li>
+      </ul>
+      <p>Les bornes sont converties en indices selon le pas de temps, réordonnées si elles sont inversées et limitées à l'étendue disponible.</p>
+    </section>
+
+    <section id="export">
+      <h2>8. Export <code>.seed</code></h2>
+      <div class="tableViewport"><table>
+        <thead><tr><th>Bouton</th><th>Étendue</th></tr></thead>
+        <tbody><tr><td>Exporter SEED</td><td>Enregistrement complet</td></tr><tr><td>Exporter la plage affichée</td><td>Plage sélectionnée, avec suffixe <code>_&lt;début&gt;s-&lt;fin&gt;s</code></td></tr></tbody>
+      </table></div>
+      <p>Le fichier produit est un TSV Windows-1252, avec <code>TEMPS</code> en première colonne. Le temps repart de zéro au début de la plage et avance selon le pas de temps. Les noms de voies sont normalisés, les espaces remplacés par des soulignés et les valeurs arrondies à 5 décimales, sans zéros finaux inutiles.</p>
+      <p>Une valeur absente est exportée comme champ vide, jamais comme zéro. Les fichiers exportés peuvent être relus avec le bouton <code>.seed</code> pour reprendre une session sans refaire les corrections.</p>
+    </section>
+
+    <section id="reinitialisation">
+      <h2>9. Remise à zéro</h2>
+      <p>Le bouton corbeille, dans la ligne de chargement, vide les mesures, sources externes, offsets, sélections, graphique, bornes de plage et champs de fichier. Une confirmation est demandée si des mesures sont chargées.</p>
+    </section>
+  </main>
+</body>
+</html>
