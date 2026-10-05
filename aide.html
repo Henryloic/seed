@@ -103,7 +103,7 @@ blockquote{ margin:14px 0; padding:8px 14px; border-left:4px solid var(--yellow)
         <tbody>
           <tr><td><code>.M00x</code></td><td>Morphée, tabulation, 4 lignes d'entête</td><td>Sélectionnable</td><td>Timer de l'enregistrement libre et horodatage reconstruit depuis Date/Heure</td></tr>
           <tr><td>BRBC3</td><td>CSV virgule</td><td>UTF-8</td><td>Colonne <code>TEMPS</code> (s), instant initial lu dans <code>Time</code></td></tr>
-          <tr><td>Soufflerie</td><td>CSV point-virgule, 1 ligne d'entête</td><td>Windows-1252</td><td>Colonne 1 (s), date/heure dans les colonnes 3 et 2 de la première ligne de données</td></tr>
+          <tr><td>Soufflerie</td><td>CSV point-virgule, 1 ligne d'entête, décimales avec virgule</td><td>Windows-1252</td><td>Colonne 1 (s), date/heure dans les colonnes 3 et 2 de la première ligne de données</td></tr>
           <tr><td><code>.seed</code></td><td>TSV, 1 ligne d'entête</td><td>Windows-1252</td><td>Colonne <code>TEMPS</code> (s)</td></tr>
         </tbody>
       </table></div>
@@ -182,9 +182,12 @@ blockquote{ margin:14px 0; padding:8px 14px; border-left:4px solid var(--yellow)
           <tr><td>Supprimer la voie</td><td>Retire la voie du jeu de données.</td></tr>
           <tr><td>Calculer la moyenne (_moy)</td><td>Calcule la moyenne échantillon par échantillon.</td></tr>
           <tr><td>Calculer la somme (_sum)</td><td>Calcule la somme échantillon par échantillon.</td></tr>
+          <tr><td>Correction unitaire</td><td>Sur une seule voie sélectionnée, ouvre la saisie d'un offset et d'un gain, puis crée une voie supplémentaire suffixée <code>_mod</code> selon <code>(valeur - offset) × gain</code>. Les valeurs absentes restent absentes et la voie d'origine n'est pas modifiée. Les valeurs par défaut sont offset <code>0</code> et gain <code>1</code> ; relancer l'outil sur la même voie met à jour sa voie <code>_mod</code>.</td></tr>
+          <tr><td>Créer PHASE_ESSAI</td><td>Disponible après chargement d'un fichier Soufflerie. Crée la voie <code>PHASE_ESSAI</code> à partir de <code>VITESSE_CYCLE</code> et <code>VITESSE_BANC</code> ; ces deux voies doivent être présentes. La détection reprend les règles SEED de fusion des phases courtes et de numérotation.</td></tr>
         </tbody>
       </table></div>
       <p>Les calculs ignorent les valeurs absentes : la moyenne porte sur les seules voies valides à chaque instant et vaut « absent » si aucune voie ne l'est. L'unité n'est propagée que si toutes les voies sources partagent la même. Relancer un calcul avec les mêmes sources met à jour la voie existante.</p>
+      <p>Pour <code>PHASE_ESSAI</code>, les échantillons où la vitesse banc vaut zéro sont neutralisés avant la détection des transitions de cycle. Une phase de moins de <code>200 × fréquence d'échantillonnage</code> est fusionnée avec la suivante si celle-ci contient une consigne nulle. Une vitesse moyenne banc égale à <code>5</code> donne la valeur <code>0</code> ; les autres phases sont numérotées, avec incrément du numéro après les phases d'au moins <code>500</code> échantillons.</p>
     </section>
 
     <section id="visualisation">
