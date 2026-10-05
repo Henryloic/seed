@@ -1597,17 +1597,15 @@ function appliquerCorrectionManuelle(evenement){
 }
 
 function creerPhaseEssai(){
-  const vitesseBanc = mesures.find(colonne => colonne.nomAffiche === "VITESSE_BANC");
   const vitesseCycle = mesures.find(colonne => colonne.nomAffiche === "VITESSE_CYCLE");
-  if(!vitesseBanc || !vitesseCycle){
-    $("etat").textContent = "Les voies VITESSE_BANC et VITESSE_CYCLE sont nécessaires pour créer PHASE_ESSAI.";
+  if(!vitesseCycle){
+    $("etat").textContent = "La voie VITESSE_CYCLE est nécessaire pour créer PHASE_ESSAI.";
     return;
   }
 
   const nombrePoints = dates.length;
-  const vitesse = vitesseBanc.valeurs.map(valeur => Number.isFinite(valeur) ? valeur : 0);
-  const seuilVitesseNulle = 0.05; // km/h
-  const cycle = vitesseCycle.valeurs.map((valeur, index) => Math.abs(vitesse[index]) <= seuilVitesseNulle || !Number.isFinite(valeur) ? 0 : valeur);
+  const seuilCycleNul = 0.05; // km/h
+  const cycle = vitesseCycle.valeurs.map(valeur => Number.isFinite(valeur) && Math.abs(valeur) > seuilCycleNul ? valeur : 0);
   const frontCycle = new Array(nombrePoints).fill(0);
   for(let index = 0; index < nombrePoints - 1; index++){
     if(Math.abs(cycle[index] - cycle[index + 1]) > 0) frontCycle[index] = 1;
@@ -1623,11 +1621,10 @@ function creerPhaseEssai(){
     phaseMax = Math.max(phaseMax, phaseCourante);
     let stats = statsInitiales.get(phaseCourante);
     if(!stats){
-      stats = { longueur: 0, sommeVitesse: 0, minimumCycle: Infinity };
+      stats = { longueur: 0, minimumCycle: Infinity };
       statsInitiales.set(phaseCourante, stats);
     }
     stats.longueur++;
-    stats.sommeVitesse += vitesse[index];
     stats.minimumCycle = Math.min(stats.minimumCycle, cycle[index]);
   }
 
@@ -1647,11 +1644,11 @@ function creerPhaseEssai(){
     const phase = phasesFusionnees[index];
     let stats = statsFinales.get(phase);
     if(!stats){
-      stats = { longueur: 0, sommeVitesse: 0 };
+      stats = { longueur: 0, minimumCycle: Infinity };
       statsFinales.set(phase, stats);
     }
     stats.longueur++;
-    stats.sommeVitesse += vitesse[index];
+    stats.minimumCycle = Math.min(stats.minimumCycle, cycle[index]);
   }
 
   const numerosPhase = new Map([[0, 0]]);
@@ -1659,8 +1656,13 @@ function creerPhaseEssai(){
   for(let phase = 1; phase <= phaseMax; phase++){
     const stats = statsFinales.get(phase);
     if(!stats) continue;
-    numerosPhase.set(phase, stats.sommeVitesse / stats.longueur === 5 ? 0 : numeroEssai);
-    if(stats.sommeVitesse / stats.longueur !== 5 && stats.longueur >= 500) numeroEssai++;
+    if(stats.minimumCycle === 0){
+      numerosPhase.set(phase, numeroEssai);
+      numeroEssai++;
+      continue;
+    }
+    numerosPhase.set(phase, numeroEssai);
+    if(stats.longueur >= 500) numeroEssai++;
   }
   const valeurs = phasesFusionnees.map(phase => numerosPhase.get(phase) ?? 0);
   let voiePhase = mesures.find(colonne => colonne.nomAffiche === "PHASE_ESSAI");
@@ -1680,13 +1682,13 @@ function creerPhaseEssai(){
     nom: "PHASE_ESSAI",
     nomAffiche: "PHASE_ESSAI",
     label: "PHASE_ESSAI",
-    description: "Phases d'essai calculées depuis VITESSE_CYCLE et VITESSE_BANC.",
+    description: "Phases d'essai calculées uniquement depuis VITESSE_CYCLE.",
     unite: "",
     valeurs,
     valides: valeurs.length,
     type: "derivee-phase-essai",
     derivee: true,
-    indicesSources: [vitesseBanc.index, vitesseCycle.index]
+    indicesSources: [vitesseCycle.index]
   });
 
   const selection = new Set(Array.from($("variables").selectedOptions, option => Number(option.value)));
