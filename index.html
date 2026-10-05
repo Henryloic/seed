@@ -1605,8 +1605,9 @@ function creerPhaseEssai(){
   }
 
   const nombrePoints = dates.length;
-  const cycle = vitesseCycle.valeurs.map((valeur, index) => vitesseBanc.valeurs[index] === 0 || !Number.isFinite(valeur) ? 0 : valeur);
   const vitesse = vitesseBanc.valeurs.map(valeur => Number.isFinite(valeur) ? valeur : 0);
+  const seuilVitesseNulle = 0.05; // km/h
+  const cycle = vitesseCycle.valeurs.map((valeur, index) => Math.abs(vitesse[index]) <= seuilVitesseNulle || !Number.isFinite(valeur) ? 0 : valeur);
   const frontCycle = new Array(nombrePoints).fill(0);
   for(let index = 0; index < nombrePoints - 1; index++){
     if(Math.abs(cycle[index] - cycle[index + 1]) > 0) frontCycle[index] = 1;

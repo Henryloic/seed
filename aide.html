@@ -187,7 +187,7 @@ blockquote{ margin:14px 0; padding:8px 14px; border-left:4px solid var(--yellow)
         </tbody>
       </table></div>
       <p>Les calculs ignorent les valeurs absentes : la moyenne porte sur les seules voies valides à chaque instant et vaut « absent » si aucune voie ne l'est. L'unité n'est propagée que si toutes les voies sources partagent la même. Relancer un calcul avec les mêmes sources met à jour la voie existante.</p>
-      <p>Pour <code>PHASE_ESSAI</code>, les échantillons où la vitesse banc vaut zéro sont neutralisés avant la détection des transitions de cycle. Une phase de moins de <code>200 × fréquence d'échantillonnage</code> est fusionnée avec la suivante si celle-ci contient une consigne nulle. Une vitesse moyenne banc égale à <code>5</code> donne la valeur <code>0</code> ; les autres phases sont numérotées, avec incrément du numéro après les phases d'au moins <code>500</code> échantillons.</p>
+      <p>Pour <code>PHASE_ESSAI</code>, les échantillons où la vitesse banc est inférieure ou égale à <code>0,05 km/h</code> en valeur absolue sont neutralisés avant la détection des transitions de cycle. Cela évite que le bruit autour de zéro crée de nouvelles phases quand le banc est arrêté. Une phase de moins de <code>200 × fréquence d'échantillonnage</code> est fusionnée avec la suivante si celle-ci contient une consigne nulle. Une vitesse moyenne banc égale à <code>5</code> donne la valeur <code>0</code> ; les autres phases sont numérotées, avec incrément du numéro après les phases d'au moins <code>500</code> échantillons.</p>
     </section>
 
     <section id="visualisation">
