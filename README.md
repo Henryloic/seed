@@ -1,263 +1,164 @@
-# Guide fonctionnel
+# Aide fonctionnelle SEED
 
-Documentation détaillée de l'outil de normalisation des mesures bancs.
-Public visé : exploitants d'essais familiers du traitement du signal.
+[Retour à l'application](index.html)
 
-L'outil est une page HTML sans dépendance serveur. Tout le traitement a lieu en mémoire
-dans le navigateur ; aucune donnée ne sort du poste. Les fichiers sont lus en flux
-(`ReadableStream` + `TextDecoder`), ce qui permet de charger des enregistrements de plusieurs
-centaines de méga-octets sans saturer la mémoire pendant le décodage.
+Guide de l'outil de normalisation des mesures bancs, destiné aux exploitants d'essais familiers du traitement du signal.
 
----
+L'application fonctionne dans le navigateur, sans serveur. Les fichiers sont traités en mémoire et aucune donnée ne quitte le poste. La lecture en flux permet de charger des enregistrements volumineux sans décoder tout le fichier simultanément.
+
+## Sommaire
+
+- [Chargement](#1-chargement-dun-fichier-de-mesure)
+- [Correction](#2-correction--offset-et-mise-à-léchelle)
+- [Pinces](#3-fusion-des-calibres-de-pinces-ampèremétriques)
+- [Synchronisation](#4-sources-externes-et-synchronisation)
+- [Opérations](#5-opérations-sur-les-voies)
+- [Visualisation](#6-visualisation)
+- [Plage temporelle](#7-sélection-dune-plage-temporelle)
+- [Export SEED](#8-export-seed)
+- [Remise à zéro](#9-remise-à-zéro)
 
 ## 1. Chargement d'un fichier de mesure
 
-Carte **Fichier**, ligne `CHARGEMENT`. Un seul fichier de mesure est actif à la fois ;
-en charger un nouveau réinitialise entièrement la session.
+Dans la carte **Fichier**, un seul fichier de mesure est actif à la fois. En charger un nouveau réinitialise la session.
 
 | Bouton | Format attendu | Encodage | Base de temps |
-|---|---|---|---|
-| `.M00x` | Morphée, tabulation, 4 lignes d'entête | sélectionnable | voie `Timer for free recording`, horodatage absolu reconstruit depuis `Date`/`Heure` |
-| `BRBC3` | CSV virgule | UTF-8 | colonne `TEMPS` (s), instant initial lu dans la colonne `Time` |
-| `Soufflerie` | CSV point-virgule, 1 ligne d'entête | windows-1252 | colonne 1 (s), date/heure en colonnes 3 et 2 de la première ligne de données |
-| `.seed` | TSV, 1 ligne d'entête | windows-1252 | colonne `TEMPS` (s) |
+| --- | --- | --- | --- |
+| `.M00x` | Morphée, tabulation, 4 lignes d'entête | Sélectionnable | Timer de l'enregistrement libre et horodatage reconstruit depuis Date/Heure |
+| BRBC3 | CSV virgule | UTF-8 | Colonne `TEMPS` (s), instant initial lu dans `Time` |
+| Soufflerie | CSV point-virgule, 1 ligne d'entête, décimales avec virgule | Windows-1252 | Colonne 1 (s), date/heure dans les colonnes 3 et 2 de la première ligne de données |
+| `.seed` | TSV, 1 ligne d'entête | Windows-1252 | Colonne `TEMPS` (s) |
 
-### Détection de l'entête
+### Entêtes et voies
 
-Le format `.M00x` est strictement positionnel : ligne 1 `MNTPFILE`, ligne 3 les noms de voies,
-ligne 4 les unités. Le format BRBC3 est variable : l'outil balaie les 30 premières lignes à la
-recherche de la ligne commençant par `TEMPS` (noms de voies), la ligne suivante portant les
-unités, et mémorise au passage la ligne `NUMERO_ESSAI` et ses valeurs associées.
+Le format `.M00x` est positionnel : ligne 1 `MNTPFILE`, ligne 3 noms de voies, ligne 4 unités. Pour BRBC3, l'outil recherche la ligne commençant par `TEMPS` dans les 30 premières lignes et mémorise aussi les constantes d'entête.
 
-### Reconstruction de la base de temps
+Les colonnes entièrement non numériques sont écartées. Les champs vides, `NaN` et booléens deviennent des valeurs absentes : ils restent des discontinuités dans le tracé et ne sont pas interpolés silencieusement.
 
-Pour BRBC3, Soufflerie et SEED, le pas est estimé par `t[2] − t[1]` et la base de temps est
-**régénérée uniformément** (`index × Δt`). Cela élimine la gigue d'horodatage du système
-d'acquisition et garantit un pas strictement constant, prérequis de l'export et de tout
-traitement fréquentiel ultérieur. Le pas retenu est affiché dans la barre d'état.
+Les noms de voies connus sont normalisés selon la table de correspondances commune. La correspondance accepte les espaces ou les soulignés ; les voies non référencées gardent leur nom. Pour BRBC3, espaces et `~` deviennent des soulignés, et les constantes d'entête (inertie et coefficients F0/F1/F2) sont ajoutées comme voies constantes.
 
-Pour `.M00x`, l'horodatage est reconstruit à partir du timer de l'enregistrement libre,
-ce qui préserve les éventuelles ruptures de cadence.
+### Base de temps et encodage
 
-### Sélection des voies
-
-Les colonnes entièrement non numériques (texte, booléens, horodatages) sont écartées :
-une voie n'est conservée que si elle contient au moins une valeur finie. Les valeurs
-illisibles (`NaN`, champs vides, `True`/`False`) deviennent `null` et créent une
-**discontinuité réelle** dans le tracé (`connectgaps: false`) — elles ne sont jamais
-interpolées silencieusement.
-
-### Normalisation des noms de voies
-
-Les noms bruts sont traduits vers la nomenclature commune (`VITESSE_BANC`,
-`EFFORT_VEH_TOTAL`, `DISTANCE_BANC_AV`, `COEFF_F0_BANC`…) via la table
-`CORRESPONDANCES_VOIES`, recopie de `data_labelling.xlsx` / onglet `LABEL`, avec une colonne
-par banc. La correspondance est exacte, avec tolérance sur la graphie espace / souligné.
-Les voies non référencées conservent leur nom d'origine.
-
-Spécificités BRBC3 : les espaces et les `~` (séparateur des voies CAN) sont remplacés par `_`,
-et les constantes d'entête (`INERTIE`, `F0`, `F1`, `F2`) sont injectées comme voies
-constantes afin d'être disponibles à l'export.
-
-### Encodage
-
-Le sélecteur `Encodage` ne s'applique qu'aux fichiers `.M00x`, dont la source peut varier.
-Les autres formats ont un encodage imposé, déduit de leur outil générateur.
-
----
+BRBC3, Soufflerie et SEED utilisent un pas estimé depuis les premières mesures, puis reconstruisent une base de temps uniforme. Cela supprime la gigue d'acquisition et fournit un pas constant. Pour `.M00x`, l'horodatage est reconstruit depuis le timer, ce qui préserve les ruptures éventuelles de cadence. Le sélecteur d'encodage ne concerne que les fichiers `.M00x`.
 
 ## 2. Correction : offset et mise à l'échelle
 
-Section **Correction**, masquée pour les fichiers `.seed` (déjà normalisés).
+La section **Correction** est masquée pour les fichiers `.seed`, déjà normalisés. Une voie est éligible si son nom suit la convention `TYPE_<désignation>_<coefficient>`.
 
-### Convention d'instrumentation
+| Préfixe | Grandeur | Unité |
+| --- | --- | --- |
+| I | Courant | A |
+| U | Tension | V |
+| T | Température | °C |
+| P | Pression | bar |
+| D | Déplacement | mm |
 
-Une voie est éligible si son nom suit `TYPE_<désignation>_<coefficient>` :
+Le fichier d'offset doit provenir du même banc. Pour chaque voie éligible, l'offset est la moyenne des 60 dernières secondes du fichier, supposées correspondre à un palier stabilisé au repos.
 
-| Préfixe | Grandeur | Unité appliquée |
-|---|---|---|
-| `I` | courant | A |
-| `U` | tension | V |
-| `T` | température | °C |
-| `P` | pression | bar |
-| `D` | déplacement | mm |
-
-### Calcul de l'offset
-
-Le fichier d'offset doit être **du même banc** que la mesure (le filtre et le libellé du bouton
-s'adaptent automatiquement). Pour chaque voie dont le nom comporte un préfixe de type,
-l'outil calcule la **moyenne sur les 60 dernières secondes** de l'enregistrement d'offset.
-C'est la fenêtre de référence au repos : elle suppose que l'acquisition d'offset se termine
-par un palier stabilisé.
-
-### Formule appliquée
-
-```
-valeur_corrigée = (valeur_brute − offset) × coefficient / 10 × signe
+```text
+valeur_corrigée = (valeur_brute - offset) × coefficient / 10 × signe
 ```
 
-L'offset n'est **pas** soustrait aux voies de type `T` : une température absolue n'a pas de
-zéro instrumental à compenser.
-
-Le compte rendu indique le nombre de voies mises à l'échelle, le nombre d'offsets
-effectivement appliqués et le nombre de voies sans correspondance (offset nul par défaut).
-La correction repart toujours des valeurs brutes mémorisées : elle n'est jamais cumulative.
-Le bouton `Réinitialiser` restaure l'état d'origine.
-
----
+L'offset n'est pas soustrait aux voies de type `T`, car une température absolue n'a pas de zéro instrumental à compenser. La correction repart toujours des valeurs brutes et n'est jamais cumulative. **Réinitialiser** restaure les valeurs d'origine.
 
 ## 3. Fusion des calibres de pinces ampèremétriques
 
-Disponible après la mise à l'échelle. Une famille regroupe les voies partageant la racine
-`I_<désignation>` avec des calibres différents en suffixe.
+La fusion est disponible après la mise à l'échelle. Une famille regroupe les voies ayant la même racine `I_<désignation>` avec des calibres différents en suffixe.
 
-**Sélection des pinces actives** : seules les voies dont l'écart-type dépasse `0,25 A` sont
-retenues, ce qui écarte les pinces non branchées ou saturées à zéro.
+Seules les voies dont l'écart-type dépasse **0,25 A** sont retenues, ce qui écarte les pinces inactives ou bloquées à zéro. Les calibres sont triés par ordre croissant : la pince la plus sensible est conservée aux faibles amplitudes, puis les valeurs de la pince de calibre supérieur la remplacent au-delà de `calibre_précédent - 10`.
 
-**Reconstruction** : les pinces sont triées par calibre croissant. On part de la plus
-sensible, puis pour chaque calibre supérieur on substitue les échantillons dont la valeur
-absolue dépasse `calibre_précédent − 10`. Le résultat est une voie unique qui conserve la
-résolution du petit calibre dans les faibles amplitudes et bascule sur le grand calibre
-avant saturation.
-
-La voie produite est marquée comme dérivée et porte le suffixe `(fusion des calibres)`.
-
----
+La voie résultante porte le suffixe *(fusion des calibres)*.
 
 ## 4. Sources externes et synchronisation
 
-Section **Synchronisation**, disponible dès qu'un fichier de mesure est chargé.
+La section de synchronisation apparaît lorsqu'un fichier de mesure est chargé.
 
-### Formats lus
+| Bouton | Extension / séparateur | Entête | Temps |
+| --- | --- | --- | --- |
+| CSV CAN | `.csv`, virgule ou point-virgule détecté automatiquement | 1 ligne | Secondes ou horodatage pour l'offset ; alignement par index |
+| CarScanner | `.csv`, virgule | 1 ligne | `HH:mm:ss.SSS`, passage de minuit géré |
+| OBD Facile | `.txt`, point-virgule | 3 lignes, noms ligne 1 et unités ligne 3 | Secondes, notation française |
+| Diagra | `.csv`, point-virgule | 3 lignes, noms ligne 2 et unités ligne 3 | Millisecondes |
 
-| Bouton | Extension | Séparateur | Entête | Colonne temps |
-|---|---|---|---|---|
-| `CSV CAN` | `.csv` | `,` ou `;` auto-détecté | 1 ligne | ignorée (alignement par index) |
-| `CarScanner` | `.csv` | `,` | 1 ligne | `HH:mm:ss.SSS`, passage de minuit géré |
-| `OBD Facile` | `.txt` | `;` | 3 lignes (noms L1, unités L3) | secondes, notation française (`.` milliers, `,` décimale) |
-| `Diagra` | `.csv` | `;` | 3 lignes (noms L2, unités L3) | millisecondes |
+### Export CSV CAN depuis ASAM MDF
 
-### Adaptation du pas de temps
+Dans l'outil **ASAM MDF (asammdf)**, exporter le journal CAN avec les réglages ci-dessous. Utiliser les mêmes réglages pour le fichier de mesure et le fichier d'offset.
 
-Le pas médian de la source est comparé à celui du fichier de mesure. Si l'écart relatif
-dépasse `10⁻³`, les voies sont **rééchantillonnées par interpolation linéaire** sur une grille
-`0, Δt, 2Δt…` calée sur le pas cible. En deçà, les données sont conservées telles quelles
-pour éviter un lissage inutile.
+- **Cut** : décoché, pour exporter l'enregistrement complet.
+- **Resample** : coché ; sélectionner **step** pour un fichier à 10 Hz et régler le pas à `0.100000s` (0,1 s, soit 10 Hz). Laisser **Time from 0s** décoché.
+- **Output format** : `CSV`.
+- **Single time base** et **Time as date** : cochés. Laisser **Time from 0s**, **Raw values** et **Use display names** décochés.
+- **Empty channels** : `skip` ; **Delimiter** : virgule (`,`).
+- **Double quote** : coché ; **Escape Char** : `None` ; **Line Terminator** : `\r\n` ; **Quote Char** : `"` ; **Quoting** : `MINIMAL`.
 
-L'interpolation ne crée jamais de valeur hors du support : en dehors de la plage temporelle
-de la source, ou à cheval sur un trou, l'échantillon reste `null`.
+Le CSV attendu contient une seule ligne d'entête avec les noms de voies, puis les mesures, avec le temps en première colonne. Conserver les noms d'origine, notamment `TYPE_<désignation>_<coefficient>`, pour permettre la détection des voies éligibles et leur correspondance avec le fichier d'offset.
 
-> Limite à connaître : l'interpolation linéaire est un filtre passe-bas implicite. Sur une
-> source sous-échantillonnée par rapport au banc (CAN à 1 Hz contre banc à 10 Hz), le signal
-> reconstruit ne restitue évidemment pas la dynamique manquante.
+![Configuration d'export CSV CAN dans ASAM MDF : rééchantillonnage à 0,1 seconde, base de temps unique et temps sous forme de date.](style_rno/Asammdf.png)
 
-### Mise à l'échelle des voies importées
+### Rééchantillonnage
 
-Bouton `Mettre à l'échelle`. Applique le **facteur seul**, sans offset :
+Le pas médian de la source est comparé à celui de la mesure. Si l'écart relatif dépasse `10⁻³`, les voies sont rééchantillonnées par interpolation linéaire sur une grille au pas cible. En deçà, elles restent inchangées pour éviter un lissage inutile.
 
+L'interpolation ne crée aucune valeur en dehors de la plage source ni à cheval sur un trou. Elle agit comme un filtre passe-bas implicite : une source sous-échantillonnée, par exemple CAN à 1 Hz face à un banc à 10 Hz, ne restitue pas la dynamique manquante.
+
+### Mise à l'échelle et alignement
+
+```text
+valeur_CAN = (valeur_brute - offset) × coefficient / 10
 ```
-valeur = valeur_brute × coefficient / 10
-```
 
-sur les voies de la source suivant la convention `TYPE_…_coefficient`. Le bouton reste grisé
-si aucune voie éligible n'est détectée, ou après application (pour empêcher un double
-facteur). Si la synchronisation a déjà eu lieu, les voies déjà fusionnées sont mises à jour
-elles aussi.
+Pour le CAN, le bouton unique **Appliquer offset et échelle CAN** demande un CSV d'offset du même format, puis calcule automatiquement la moyenne des 60 dernières secondes de chaque voie correspondante et la soustrait avant la mise à l'échelle. Les températures (`T`) ne sont pas corrigées en offset. Les voies sans correspondance utilisent un offset nul et sont signalées dans le compte rendu.
 
-### Alignement temporel
+Pour les autres sources, le bouton **Mettre à l'échelle** applique seulement `valeur_brute × coefficient / 10`. Le bouton est désactivé si aucune voie n'est éligible et après application, pour éviter un double facteur. Les voies déjà synchronisées sont également mises à jour.
 
-Bouton `Synchroniser`. On choisit une voie dans chaque source et un seuil. L'outil repère le
-**premier franchissement par valeurs croissantes** du seuil dans chacune (`v[i−1] < seuil`
-et `v[i] ≥ seuil`), puis décale les deux séries pour faire coïncider ces deux indices.
+Pour **Synchroniser**, choisir une voie dans chaque source et un seuil. L'outil repère le premier franchissement croissant du seuil (`v[i-1] < seuil` et `v[i] ≥ seuil`), puis aligne les deux indices. Seule la plage commune est conservée et les voies externes sont ajoutées au jeu de mesures.
 
-Seule la **plage commune** aux deux sources est conservée, de part et d'autre du repère.
-Les voies de la source externe sont ensuite ajoutées au jeu de mesures, préfixées par le nom
-de la source.
-
-Le choix du seuil est déterminant : prendre un front franc et non ambigu (typiquement le
-démarrage véhicule sur une voie de vitesse). Un seuil trop bas déclenche sur le bruit de zéro.
-
-La synchronisation est **réversible** : l'état antérieur est mémorisé, et une nouvelle
-synchronisation repart des données non tronquées.
-
----
+Choisir un front net, par exemple le démarrage du véhicule sur une voie de vitesse. Un seuil trop bas peut déclencher sur le bruit de zéro. La synchronisation est réversible : une nouvelle synchronisation repart des données non tronquées.
 
 ## 5. Opérations sur les voies
 
-Barre d'outils apparaissant sous le nom du fichier.
+| Action | Effet |
+| --- | --- |
+| Inverser le signe | Multiplie par -1 les voies sélectionnées ; le signe est conservé lors d'une correction. |
+| Renommer la voie | Modifie le nom affiché et exporté. Une seule voie à la fois. |
+| Supprimer la voie | Retire la voie du jeu de données. |
+| Calculer la moyenne (`_moy`) | Calcule la moyenne échantillon par échantillon. |
+| Calculer la somme (`_sum`) | Calcule la somme échantillon par échantillon. |
+| Correction unitaire | Sur une seule voie sélectionnée, ouvre la saisie d'un offset et d'un gain, puis crée une voie supplémentaire suffixée `_mod` selon `(valeur - offset) × gain`. Les valeurs absentes restent absentes et la voie d'origine n'est pas modifiée. Les valeurs par défaut sont offset `0` et gain `1` ; relancer l'outil sur la même voie met à jour sa voie `_mod`. |
+| Créer PHASE_ESSAI | Disponible après chargement d'un fichier Soufflerie. Utilise uniquement `VITESSE_CYCLE`, qui doit être présente. Le retour de consigne à zéro démarre une phase supplémentaire ; la reprise de la consigne démarre la suivante. La détection reprend les règles SEED de fusion des phases courtes et de numérotation. |
 
-| Bouton | Effet |
-|---|---|
-| `Inverser le signe` | multiplie par −1 les voies sélectionnées ; le signe est mémorisé et réappliqué après une correction d'offset |
-| `Renommer la voie` | modifie le nom affiché et exporté (une seule voie à la fois) |
-| `Supprimer la voie` | retire définitivement la voie du jeu de données |
-| `Calculer la moyenne (_moy)` | moyenne échantillon par échantillon des voies sélectionnées |
-| `Calculer la somme (_sum)` | somme échantillon par échantillon |
+Les calculs ignorent les valeurs absentes : la moyenne porte sur les seules voies valides à chaque instant et vaut « absent » si aucune voie ne l'est. L'unité n'est propagée que si toutes les voies sources partagent la même. Relancer un calcul avec les mêmes sources met à jour la voie existante.
 
-Les voies calculées ignorent les échantillons non finis : la moyenne porte sur les seules
-voies valides à cet instant, et vaut `null` si aucune ne l'est. L'unité n'est propagée que si
-toutes les voies sources partagent la même, afin de ne pas produire d'agrégat hétérogène
-silencieux.
-
-Une voie calculée est identifiée par son type et la liste de ses sources : relancer le même
-calcul met à jour la voie existante au lieu d'en créer un doublon.
-
----
+Pour `PHASE_ESSAI`, les consignes `VITESSE_CYCLE` dont la valeur absolue est inférieure ou égale à `0,05 km/h` sont neutralisées avant la détection des transitions. Cela évite que le bruit autour de zéro crée de nouvelles phases. Le retour à zéro reçoit un numéro de phase et la reprise de consigne le numéro suivant. Une phase de moins de `200 × fréquence d'échantillonnage` est fusionnée avec la suivante si celle-ci contient une consigne nulle. Les phases actives sont numérotées, avec incrément du numéro après les phases d'au moins `500` échantillons.
 
 ## 6. Visualisation
 
-Jusqu'à **16 voies** simultanées, tracées en `scattergl` (rendu WebGL, nécessaire au-delà de
-quelques dizaines de milliers de points).
+Jusqu'à **16 voies** peuvent être affichées simultanément. Le tracé utilise `scattergl`, adapté aux enregistrements de grande taille.
 
-- Si les voies sélectionnées se répartissent sur exactement **deux unités**, un second axe Y
-  est créé automatiquement à droite.
-- L'axe X est temporel (horodatage absolu), survol en `x unified` pour comparer les voies à
-  un même instant.
-- Les discontinuités (`null`) sont affichées comme telles.
-
----
+- Deux unités différentes créent automatiquement un second axe Y à droite.
+- L'axe X affiche la date et l'heure ; le survol unifié facilite la comparaison au même instant.
+- Les valeurs absentes restent visibles comme des discontinuités.
 
 ## 7. Sélection d'une plage temporelle
 
-Sous le graphique.
+- Le curseur sous l'axe X permet de sélectionner une plage et d'en prévisualiser la courbe.
+- Les champs **Début (s)** et **Fin (s)** règlent précisément les bornes ; ils suivent le zoom et le curseur.
+- **Plage complète** restaure toute l'étendue.
+- Le compteur indique le nombre d'échantillons sélectionnés.
 
-- Le **rangeslider** sous l'axe X offre deux poignées et affiche la courbe en miniature.
-- Les champs `Début (s)` et `Fin (s)` donnent le calage exact au clavier ; ils sont
-  synchronisés en continu avec le zoom et les poignées.
-- `Plage complète` restaure l'étendue totale.
-- Le compteur indique le nombre d'échantillons retenus.
-
-Les bornes sont converties en indices via le pas de temps, réordonnées si elles sont
-inversées, et bornées à l'étendue disponible.
-
----
+Les bornes sont converties en indices selon le pas de temps, réordonnées si elles sont inversées et limitées à l'étendue disponible.
 
 ## 8. Export `.seed`
 
 | Bouton | Étendue |
-|---|---|
-| `Exporter SEED` (carte Fichier) | enregistrement complet |
-| `Exporter la plage affichée` (sous le graphe) | plage sélectionnée, suffixe `_<début>s-<fin>s` |
+| --- | --- |
+| Exporter SEED | Enregistrement complet |
+| Exporter la plage affichée | Plage sélectionnée, avec suffixe `_<début>s-<fin>s` |
 
-**Format produit**, conforme aux fichiers de référence :
+Le fichier produit est un TSV Windows-1252, avec `TEMPS` en première colonne. Le temps repart de zéro au début de la plage et avance selon le pas de temps. Les noms de voies sont normalisés, les espaces remplacés par des soulignés et les valeurs arrondies à 5 décimales, sans zéros finaux inutiles.
 
-- TSV encodé en **windows-1252** (un accent = un octet) ;
-- première colonne `TEMPS`, **repartant de zéro** au début de la plage exportée et incrémentée
-  du pas de temps ;
-- une colonne par voie, au nom normalisé, espaces remplacés par des soulignés ;
-- valeurs arrondies à **5 décimales**, zéros de fin supprimés.
-
-La suppression des zéros de fin réduit typiquement le volume de 50 à 70 % sans aucune perte :
-la valeur relue est strictement identique. Une valeur absente reste un champ vide, jamais un
-zéro.
-
-Le fichier produit est relisible par le bouton `.seed`, ce qui permet de reprendre une session
-sans refaire les corrections.
-
----
+Une valeur absente est exportée comme champ vide, jamais comme zéro. Les fichiers exportés peuvent être relus avec le bouton `.seed` pour reprendre une session sans refaire les corrections.
 
 ## 9. Remise à zéro
 
-Bouton corbeille, à droite de la ligne `CHARGEMENT`. Vide l'ensemble des états : mesures,
-source externe, offset, sélections, graphique, bornes de plage et champs de fichier.
-Une confirmation est demandée si des mesures sont chargées.
+Le bouton corbeille, dans la ligne de chargement, vide les mesures, sources externes, offsets, sélections, graphique, bornes de plage et champs de fichier. Une confirmation est demandée si des mesures sont chargées.
