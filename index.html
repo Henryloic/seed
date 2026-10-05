@@ -175,7 +175,7 @@ select:focus, input[type=number]:focus{ border-color:var(--rno-black); outline:n
 #variables option:checked{ color:var(--rno-black); background:var(--rno-yellow); }
 
 /* ---- boîte de dialogue ---- */
-#syncDialog{
+#syncDialog, #correctionManuelleDialog{
   width:min(520px, calc(100% - 24px));
   max-height:calc(100vh - 24px);
   overflow:auto;
@@ -186,9 +186,9 @@ select:focus, input[type=number]:focus{ border-color:var(--rno-black); outline:n
   border-radius:var(--rayon);
   padding:24px;
 }
-#syncDialog::backdrop{ background:rgba(0,0,0,.45); }
-#syncDialog label{ display:block; margin:14px 0 6px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
-#syncDialog .hint{ min-height:1em; }
+#syncDialog::backdrop, #correctionManuelleDialog::backdrop{ background:rgba(0,0,0,.45); }
+#syncDialog label, #correctionManuelleDialog label{ display:block; margin:14px 0 6px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+#syncDialog .hint, #correctionManuelleDialog .hint{ min-height:1em; }
 [role=alert]{ color:#C8102E; font-weight:700; }
 
 /* ---- tuiles ---- */
@@ -276,7 +276,7 @@ select.compact{ width:auto; min-width:140px; padding:6px 10px; font-size:12px; }
     <header class="entete">
       <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI1LjIuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkNhbHF1ZV8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIKCSB2aWV3Qm94PSIwIDAgNzE2LjYgODUwLjQiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDcxNi42IDg1MC40OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxnIGlkPSJDYXB0aW9ucyI+CjwvZz4KPGcgaWQ9IkV4Y2x1c2lvbl9hcmVhIj4KPC9nPgo8ZyBpZD0iQ29uc3RydWN0aW9uIj4KPC9nPgo8ZyBpZD0iRW1ibGVtIj4KCTxwYXRoIGQ9Ik00ODguMyw0MjUuMkwzMzYuNiw3MDguN2gtNDMuM0wxNDEuNyw0MjUuMmwxNTEuNi0yODMuNWg0My4zTDE4NS4xLDQyNS4ybDEyOS45LDI0M2wxMjkuOS0yNDNsLTc1LjgtMTQxLjdsMjEuNy00MC41CgkJTDQ4OC4zLDQyNS4yeiBNNDIzLjMsMTQxLjdIMzgwTDIyOC40LDQyNS4ybDk3LjUsMTgyLjJsMjEuNy00MC41bC03NS44LTE0MS44bDEyOS45LTI0M2wxMjkuOSwyNDNMMzgwLDcwOC43aDQzLjNsMTUxLjYtMjgzLjUKCQlMNDIzLjMsMTQxLjd6Ii8+CjwvZz4KPC9zdmc+Cg==" alt="">
       <h1>S. E. E. D. ²</h1><h4>RGE-APE2</h4>
-      <a class="btn2 compact aideLien" href="aide.html">Aide</a>
+      <a class="btn2 compact aideLien" href="aide.html" target="_blank" rel="noopener">Aide</a>
     </header>
 
     <section class="card">
@@ -310,6 +310,8 @@ select.compact{ width:auto; min-width:140px; padding:6px 10px; font-size:12px; }
         <button type="button" id="supprimerVoie">Supprimer la voie</button>
         <button type="button" id="calculerMoyenne">Calculer la moyenne (_moy)</button>
         <button type="button" id="calculerSomme">Calculer la somme (_sum)</button>
+        <button type="button" id="ouvrirCorrectionManuelle">Correction unitaire</button>
+        <button type="button" id="creerPhaseEssai" hidden>Créer PHASE_ESSAI</button>
       </div>
       <div id="processingTools" class="processingTools" hidden>
         <div class="row ligneChargement">
@@ -363,6 +365,22 @@ select.compact{ width:auto; min-width:140px; padding:6px 10px; font-size:12px; }
         <div class="row syncActions">
           <button type="button" id="annulerSync" class="btn2">Annuler</button>
           <button type="submit">Aligner et conserver la plage commune</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="correctionManuelleDialog" aria-labelledby="correctionManuelleTitre">
+      <form id="correctionManuelleForm">
+        <h2 id="correctionManuelleTitre">Correction unitaire</h2>
+        <p id="voieCorrectionManuelle" class="hint"></p>
+        <label for="offsetManuel">Offset</label>
+        <input type="number" id="offsetManuel" value="0" step="any" required>
+        <label for="gainManuel">Gain multiplicateur</label>
+        <input type="number" id="gainManuel" value="1" step="any" required>
+        <p id="erreurCorrectionManuelle" class="hint" role="alert"></p>
+        <div class="row syncActions">
+          <button type="button" id="annulerCorrectionManuelle" class="btn2">Annuler</button>
+          <button type="submit">Créer la voie _mod</button>
         </div>
       </form>
     </dialog>
@@ -713,7 +731,7 @@ async function analyserFichierSoufflerie(fichier, progression = () => {}){
       return;
     }
     if(!ligne.trim()) return;
-    const instant = nombreSource(champs[0], false);
+    const instant = nombreSource(champs[0], true);
     if(instant === null){
       lignesIgnorees++;
       return;
@@ -724,7 +742,7 @@ async function analyserFichierSoufflerie(fichier, progression = () => {}){
     }
     temps.push(instant);
     for(const colonne of colonnes){
-      const valeur = nombreSource(champs[colonne.index], false);
+      const valeur = nombreSource(champs[colonne.index], true);
       colonne.valeurs.push(valeur);
       if(valeur !== null) colonne.valides++;
     }
@@ -1030,6 +1048,7 @@ function reinitialiserInterface(){
   $("etatSync").textContent = "";
   $("exporterCsv").disabled = true;
   if($("syncDialog").open) $("syncDialog").close();
+  if($("correctionManuelleDialog").open) $("correctionManuelleDialog").close();
   $("erreurSync").textContent = "";
   $("seuilSync").value = "5";
   $("voieMesure").replaceChildren();
@@ -1037,6 +1056,7 @@ function reinitialiserInterface(){
   $("graphCard").hidden = true;
   $("variablesCard").hidden = true;
   $("measureActions").hidden = true;
+  $("creerPhaseEssai").hidden = true;
   $("processingTools").hidden = true;
   $("variables").replaceChildren();
   $("plageDebut").value = "";
@@ -1083,6 +1103,7 @@ async function chargerFichier(fichier, banc){
       remplirVariables(new Set(), false);
     remplirFamillesPinces();
     $("measureActions").hidden = false;
+    $("creerPhaseEssai").hidden = banc !== "soufflerie";
     $("processingTools").hidden = !BANCS[banc].correction;
     $("syncTools").hidden = false;
     const nomAmbigu = mesures.some(colonne => colonne.nom === "NC");
@@ -1506,6 +1527,175 @@ function calculerVoieSelectionnee(operation){
   $("etat").textContent = `${nom} ajouté aux variables à afficher.`;
 }
 
+function ouvrirCorrectionManuelle(){
+  const colonnes = colonnesSelectionnees();
+  if(colonnes.length !== 1){
+    $("etat").textContent = "Sélectionner une seule voie pour appliquer une correction unitaire.";
+    return;
+  }
+
+  const source = colonnes[0];
+  const voieModifiee = mesures.find(colonne => colonne.type === "derivee-correction-manuelle" && colonne.sourceIndex === source.index);
+  $("voieCorrectionManuelle").textContent = `Signal sélectionné : ${source.nomAffiche || source.nom || source.label}`;
+  $("offsetManuel").value = voieModifiee ? String(voieModifiee.offsetManuel) : "0";
+  $("gainManuel").value = voieModifiee ? String(voieModifiee.gainManuel) : "1";
+  $("erreurCorrectionManuelle").textContent = "";
+  $("correctionManuelleDialog").showModal();
+}
+
+function appliquerCorrectionManuelle(evenement){
+  evenement.preventDefault();
+  const colonnes = colonnesSelectionnees();
+  if(colonnes.length !== 1){
+    $("erreurCorrectionManuelle").textContent = "Sélectionner une seule voie à corriger.";
+    return;
+  }
+
+  const offset = $("offsetManuel").valueAsNumber;
+  const gain = $("gainManuel").valueAsNumber;
+  if(!Number.isFinite(offset) || !Number.isFinite(gain)){
+    $("erreurCorrectionManuelle").textContent = "Saisir un offset et un gain numériques.";
+    return;
+  }
+
+  const source = colonnes[0];
+  const nomSource = source.nomAffiche || source.nom || source.label;
+  const nom = `${nomSource}_mod`;
+  const valeurs = source.valeurs.map(valeur => Number.isFinite(valeur) ? (valeur - offset) * gain : null);
+  let voieModifiee = mesures.find(colonne => colonne.type === "derivee-correction-manuelle" && colonne.sourceIndex === source.index);
+  if(!voieModifiee){
+    voieModifiee = {
+      index: Math.max(...mesures.map(colonne => colonne.index)) + 1,
+      nom,
+      nomAffiche: nom,
+      label: nom,
+      unite: source.unite,
+      valeurs: [],
+      type: "derivee-correction-manuelle",
+      derivee: true,
+      sourceIndex: source.index
+    };
+    mesures.push(voieModifiee);
+  }
+  Object.assign(voieModifiee, {
+    nom,
+    nomAffiche: nom,
+    label: nom,
+    description: `Correction unitaire de ${nomSource} : (valeur - ${offset}) x ${gain}.`,
+    unite: source.unite,
+    valeurs,
+    offsetManuel: offset,
+    gainManuel: gain
+  });
+
+  const selection = new Set(Array.from($("variables").selectedOptions, option => Number(option.value)));
+  selection.add(voieModifiee.index);
+  remplirVariables(selection);
+  $("correctionManuelleDialog").close();
+  tracer();
+  $("etat").textContent = `${nom} créé avec la correction (valeur - ${offset}) x ${gain}.`;
+}
+
+function creerPhaseEssai(){
+  const vitesseBanc = mesures.find(colonne => colonne.nomAffiche === "VITESSE_BANC");
+  const vitesseCycle = mesures.find(colonne => colonne.nomAffiche === "VITESSE_CYCLE");
+  if(!vitesseBanc || !vitesseCycle){
+    $("etat").textContent = "Les voies VITESSE_BANC et VITESSE_CYCLE sont nécessaires pour créer PHASE_ESSAI.";
+    return;
+  }
+
+  const nombrePoints = dates.length;
+  const cycle = vitesseCycle.valeurs.map((valeur, index) => vitesseBanc.valeurs[index] === 0 || !Number.isFinite(valeur) ? 0 : valeur);
+  const vitesse = vitesseBanc.valeurs.map(valeur => Number.isFinite(valeur) ? valeur : 0);
+  const frontCycle = new Array(nombrePoints).fill(0);
+  for(let index = 0; index < nombrePoints - 1; index++){
+    if(Math.abs(cycle[index] - cycle[index + 1]) > 0) frontCycle[index] = 1;
+  }
+
+  const phases = new Array(nombrePoints);
+  let phaseCourante = 0;
+  let phaseMax = 0;
+  const statsInitiales = new Map();
+  for(let index = 0; index < nombrePoints; index++){
+    if(index < nombrePoints - 1) phaseCourante += Math.abs(frontCycle[index + 1] - frontCycle[index]);
+    phases[index] = phaseCourante;
+    phaseMax = Math.max(phaseMax, phaseCourante);
+    let stats = statsInitiales.get(phaseCourante);
+    if(!stats){
+      stats = { longueur: 0, sommeVitesse: 0, minimumCycle: Infinity };
+      statsInitiales.set(phaseCourante, stats);
+    }
+    stats.longueur++;
+    stats.sommeVitesse += vitesse[index];
+    stats.minimumCycle = Math.min(stats.minimumCycle, cycle[index]);
+  }
+
+  const remappage = new Map();
+  const longueurMinimale = 200 / pasTemps(dates);
+  for(let phase = 1; phase < phaseMax; phase++){
+    const stats = statsInitiales.get(phase);
+    const phaseSuivante = statsInitiales.get(phase + 1);
+    if(stats && phaseSuivante && stats.longueur < longueurMinimale && phaseSuivante.minimumCycle === 0){
+      remappage.set(phase, phase - 1);
+    }
+  }
+
+  const phasesFusionnees = phases.map(phase => remappage.get(phase) ?? phase);
+  const statsFinales = new Map();
+  for(let index = 0; index < nombrePoints; index++){
+    const phase = phasesFusionnees[index];
+    let stats = statsFinales.get(phase);
+    if(!stats){
+      stats = { longueur: 0, sommeVitesse: 0 };
+      statsFinales.set(phase, stats);
+    }
+    stats.longueur++;
+    stats.sommeVitesse += vitesse[index];
+  }
+
+  const numerosPhase = new Map([[0, 0]]);
+  let numeroEssai = 1;
+  for(let phase = 1; phase <= phaseMax; phase++){
+    const stats = statsFinales.get(phase);
+    if(!stats) continue;
+    numerosPhase.set(phase, stats.sommeVitesse / stats.longueur === 5 ? 0 : numeroEssai);
+    if(stats.sommeVitesse / stats.longueur !== 5 && stats.longueur >= 500) numeroEssai++;
+  }
+  const valeurs = phasesFusionnees.map(phase => numerosPhase.get(phase) ?? 0);
+  let voiePhase = mesures.find(colonne => colonne.nomAffiche === "PHASE_ESSAI");
+  if(!voiePhase){
+    voiePhase = {
+      index: Math.max(...mesures.map(colonne => colonne.index)) + 1,
+      nom: "PHASE_ESSAI",
+      nomAffiche: "PHASE_ESSAI",
+      label: "PHASE_ESSAI",
+      unite: "",
+      valeurs: [],
+      valides: 0
+    };
+    mesures.push(voiePhase);
+  }
+  Object.assign(voiePhase, {
+    nom: "PHASE_ESSAI",
+    nomAffiche: "PHASE_ESSAI",
+    label: "PHASE_ESSAI",
+    description: "Phases d'essai calculées depuis VITESSE_CYCLE et VITESSE_BANC.",
+    unite: "",
+    valeurs,
+    valides: valeurs.length,
+    type: "derivee-phase-essai",
+    derivee: true,
+    indicesSources: [vitesseBanc.index, vitesseCycle.index]
+  });
+
+  const selection = new Set(Array.from($("variables").selectedOptions, option => Number(option.value)));
+  selection.add(voiePhase.index);
+  remplirVariables(selection);
+  tracer();
+  const phasesNumerotees = new Set(valeurs.filter(valeur => valeur > 0)).size;
+  $("etat").textContent = `Voie PHASE_ESSAI créée : ${phasesNumerotees} phase(s) numérotée(s).`;
+}
+
 /* ---- sélection d'une plage temporelle ---- */
 
 let grapheEcoute = false;
@@ -1759,6 +1949,10 @@ $("renommerVoie").addEventListener("click", renommerVoieSelectionnee);
 $("supprimerVoie").addEventListener("click", supprimerVoieSelectionnee);
 $("calculerMoyenne").addEventListener("click", () => calculerVoieSelectionnee("moyenne"));
 $("calculerSomme").addEventListener("click", () => calculerVoieSelectionnee("somme"));
+$("ouvrirCorrectionManuelle").addEventListener("click", ouvrirCorrectionManuelle);
+$("annulerCorrectionManuelle").addEventListener("click", () => $("correctionManuelleDialog").close());
+$("correctionManuelleForm").addEventListener("submit", appliquerCorrectionManuelle);
+$("creerPhaseEssai").addEventListener("click", creerPhaseEssai);
 $("variables").addEventListener("change", tracer);
 $("effacerSelection").addEventListener("click", () => {
   for(const option of $("variables").options) option.selected = false;
